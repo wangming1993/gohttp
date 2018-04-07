@@ -2,6 +2,10 @@ package log
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
 	"time"
 )
 
@@ -38,6 +42,27 @@ func init() {
 			}
 		}
 
+	}()
+
+	go func() {
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(
+			sigs,
+			syscall.SIGTERM,
+			syscall.SIGINT,
+			syscall.SIGKILL,
+			syscall.SIGHUP,
+			syscall.SIGQUIT,
+			syscall.SIGABRT,
+		)
+
+		x := <-sigs
+		fmt.Println("receive signal: ", x)
+
+		logger.Flush()
+		s, _ := strconv.Atoi(fmt.Sprintf("%d", x))
+
+		os.Exit(s)
 	}()
 }
 
